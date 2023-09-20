@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<header>
+	<title>Codetest: Todo List</title>
+	<style>
+		* {margin: 0px; padding: 0px;}
+		body {background-color: #BABABA}
+		.container {
+			width: 770px;
+			margin: 50px auto;
+			padding: 10px 15px;
+			background-color: #EAEAFF;
+			border: 1px solid black
+		}
+		.top {
+			text-align: center;
+			font-size: 22px;
+		}
+		.task_add_section {
+			display: flex;
+			justify-content: center;
+		}
+		.button_div {
+			margin-left: 5px;
+			padding: 2px 8px;
+			color: white;
+			background-color: green;
+			border-radius: 10px;
+			cursor: pointer;
+		}
+		.task_list_container {
+			margin-top: 20px;
+		}
+		#task_list {
+			margin: 5px auto;
+		}
+		#task_list td,th {
+			text-align: center;
+		}
+	</style>
+	<script>
+		function ajaxCall(data, callback) {
+			var httpRequest = new XMLHttpRequest();
+			httpRequest.onreadystatechange = () => {
+			  if (httpRequest.readyState === XMLHttpRequest.DONE) {
+				const status = httpRequest.status;
+				if (status === 0 || (status >= 200 && status < 400)) {
+				  callback(httpRequest.response ? JSON.parse(httpRequest.response) : null);
+				} else {
+				  // Oh no! There has been an error with the request!
+				}
+			  }
+			};
+			let url = "http://localhost:3000/";
+			let method = "GET";
+			let requestData = {};
+			let shouldSendData = false;
+			switch(data.type) {
+				case "tasks":
+					url += "tasks";
+					break;
+				case "task_get":
+					url += "task/" + data.id;
+					break;
+				case "task_post":
+					url += "task/" + data.id;
+					method = "POST";
+					shouldSendData = true;
+					requestData.name = data.name;
+					requestData.status = data.status;
+					break;
+				case "task_put":
+					url += "task";
+					method = "PUT";
+					shouldSendData = true;
+					requestData.name = data.name;
+					break;
+				case "task_del":
+					url += "task/" + data.id;
+					method = "DELETE";
+					break;
+				default:
+					console.log("Error - unknown type: ", data.type);
+			}
+			
+			httpRequest.open(method, url, true);
+			if (shouldSendData) {
+				httpRequest.setRequestHeader("Content-Type", "application/json");
+			}
+			httpRequest.send(shouldSendData ? JSON.stringify(requestData) : null);
+		}
+		
+		function deleteTask(id) {
+			ajaxCall({type: "task_del", id: id}, () => {
+				alert("Task deleted");
+				fetchTasks(true);
+			});
+		}
+		
+		function updateTask(id, name, status) {
+			// super simple validation
+			if (name == "") return false;
+			ajaxCall({type: "task_post", name: name, status: status, id: id}, () => {
+				// alert("Task updated!");
+				fetchTasks(true);
+			});
+			return true;
+		}
+		
+		function createTask(name) {
+			// super simple validation
+			if (name == "") return false;
+			ajaxCall({type: "task_put", name: name}, () => {
+				// alert("Task created!");
+				document.getElementById("new_task_name").value = "";
+				fetchTasks(true);
+			});
+			return true;
+		}
+		
+		function toggleTaskStatus(e) {
+			if (!updateTask(e.target.dataset.id, e.target.dataset.name, e.target.checked)) {
+				alert("Task name cannot be empty!");
+				fetchTasks(true);
+			}
+		}
+		
+		function updateTaskName(e) {
+			if (!updateTask(e.target.dataset.id, e.target.value, e.target.dataset.status)) {
+				alert("Task name cannot be empty!");
+				fetchTasks(true);
+			}
+		}
+		
+		function populateTaskList(rows, clear = false) {
+			let placeholder = document.getElementById("placeholder_item");
+			if (placeholder) {
+				placeholder.remove();
+			}
+			
+			let taskList = document.getElementById("task_list");
+			
+			if (clear) {
+				for (let i = taskList.rows.length; i > 1; --i) {
+					taskList.rows[i-1].remove();
+				}
+			}
+			
+			let list_body = taskList.getElementsByTagName('tbody')[0];
+			for (let i = 0; i < rows.length; ++i) {
+				let newRow = list_body.insertRow(-1);
+				
+				let newCell = newRow.insertCell();
+				let newNode = document.createElement("input");
+				newNode.type = "checkbox";
+				newNode.checked = rows[i].status;
+				newNode.dataset.id = rows[i].id;
+				newNode.dataset.name = rows[i].name;
+				newNode.addEventListener("change", toggleTaskStatus);
+				newCell.appendChild(newNode);
+				
+				newCell = newRow.insertCell();
+				newNode = document.createElement("input");
+				newNode.type = "text";
+				newNode.value = rows[i].name;
+				newNode.dataset.id = rows[i].id;
+				newNode.dataset.status = rows[i].status;
+				newNode.addEventListener("change", updateTaskName);
+				newCell.appendChild(newNode);
+				
+				newCell = newRow.insertCell();
+				newNode = document.createElement("span");
+				newNode.class = "delete_button";
+				newNode.innerHTML = "X";
+				newNode.onclick = () => {
+					console.log("deleteing task with id:" + rows[i].id);
+					deleteTask(rows[i].id);
+				}
+				newCell.appendChild(newNode);
+			}
+		}
+		
+		function fetchTasks(clear = false) {
+			ajaxCall({type: "tasks"}, (data) => {
+				populateTaskList(data, clear);
+			});
+		}
+		
+		function addNewTask() {
+			let taskNameInput = document.getElementById("new_task_name");
+			// TODO validation
+			if (!createTask(taskNameInput.value)) {
+				alert("Task names cannot be empty!");
+				fetchTasks(true);
+			}
+		}
+		
+		function listenForSubmit(e) {
+			if (e.key === "Enter") {
+				e.preventDefault();
+				addNewTask();
+			}
+		}
+		
+		document.addEventListener("DOMContentLoaded", function(event){
+			console.log("page loaded");
+			document.getElementById("new_task_name").addEventListener("keypress", listenForSubmit);
+			fetchTasks();
+		});
+	</script>
+</header>
+<body>
+	<div class="container">
+		<div class="top">
+			Welcome TESTUSER.
+		</div>
+		<div class="task_add_section">
+			<input type="text" name="taskname" id="new_task_name" placeholder="Task name..."/>
+			<div class="button_div" onclick="javascript:addNewTask()">
+				Add new task.
+			</div>
+		</div>
+		<div class="task_list_container">
+			<p>Tasks:</p>
+			<table id="task_list">
+				<tr><th>Done</th><th>Task name</th><th>Delete</th></tr>
+				<tr id="placeholder_item"><td></td><td>-</td><td></td></tr>
+			</table>
+		</div>
+	</div>
+</body>
+</html>

@@ -1,0 +1,39 @@
+This intructional assumes you have some sort of git management software installed, as well as Node Package Manager (NPM) or Yarn. A Postgresql server is also required, for the database part of the requested solution.
+
+
+First clone the project from github to whatever location you prefer, with the command
+	
+	git clone git@github.com:Avenar/codetest_todo.git
+
+Afterwards, use the following command to install node dependencies:
+
+	npm install
+	
+The frontend/backend should now be set up.
+
+Open a console/terminal and navigate to the binaries of your Postgresql installation (or anywhere if you have psql added to your PATH).
+
+In the following commands, you will have to replace "username" with whatever admin account you have for your Postgresql database, that has permissions to create users and new databases.
+
+Use the following command to create the test user that the backend uses, from the create_user.sql file:
+
+	psql -U username --set ON_ERROR_STOP=on -f create_user.sql
+
+Use the following command to restore the database from the codetest.sql file:
+
+	psql -U username --set ON_ERROR_STOP=on -f codetest.sql
+	
+On-error-stop is added to prevent messing up existing databases in case something conflicts.
+Don't want to ruin your previously existing data, should i happen to have accidentally named
+something the same as you.
+In this case, please contact me to discuss how to remedy the situation.
+
+
+
+Everything should now work, and you can use the "runServer.bat" file, to launch the site AND open your browser to the webpage hosted.
+
+Alternatively, if you do not want to use .bat files (or aren't on windows at all), open a console/terminal and navigate to the folder where you cloned the project, and run:
+
+	node index.js
+	
+And afterwards open your browser and navigate to "http://localhost:3000/".
