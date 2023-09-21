@@ -37,3 +37,21 @@ Alternatively, if you do not want to use .bat files (or aren't on windows at all
 	node index.js
 	
 And afterwards open your browser and navigate to "http://localhost:3000/".
+
+
+
+Notes on design choices:
+Making a basic CRUD setup is like 90% boilerplate and if i used a big framework it would both be overkill and almost entirely eliminate the amount of actual code i would write myself.
+Therefore i stuck to plain html/css/javascript for the frontend. (Even if my limited visual design skills could have been aided by something like bootstrap).
+The task specified a nodejs server with express, so that particular choice was easy. I could have gone for multiple instances hosting different things,
+but since this is such a minor project, i didn't feel like making an unnecessary split between the server serving the frontend and backend.
+In a real life task with a proper size project, i'd have separate hosting for frontend and backend (and a multitude of changes in tech stack, frameworks etc. Personally big fan of webpack bundles for frontend).
+The database is as barebones as possible. Again, just showing off basic CRUD, (and with my limit on time) i didn't make prepared statements, audit triggers etc.
+
+In terms of code/functionality design, it might seem odd that i clear and reaquire all tasks on most operations, instead of some more sensible alternatives.
+This basically comes down to timepressure, and, ironically enough, i felt like that might actually be an interesting thing about me to highlight.
+I wanted to show that i could make a functional and quick solution to get this codetest done in a reasonable time, because that's what business needs dictates (getting this codetest back to you in time),
+despite knowing full well that there are much better methods of dealing with that particular situation. In a proper frontend there would be a state manager with all the data,
+and i'd update the state data instead of refreshing the full payload every transaction. And even if the system built didn't have a state setup, querying individual tasks upon update and only mending the single
+element would also have been a much more functional, resourcesaving and efficient manner of building it. But the world of IT and startups are rarely ideal, and at least i have something that "looks" functional,
+while i would then have time to refactor once clients are satisfied.
